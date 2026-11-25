@@ -1,0 +1,27 @@
+{
+  "name": "talkhub",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxtjs/robots": "^6.2.4",
+    "@nuxtjs/sitemap": "^8.6.2",
+    "lucide-vue-next": "^0.545.0",
+    "nuxt": "^4.2.0",
+    "vue": "^3.5.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/node": "^26.6.10",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.0",
+    "vue-tsc": "^3.3.14"
+  }
+}

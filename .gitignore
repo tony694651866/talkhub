@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# nuxt / nitro build output
+.nuxt/
+.output/
+.nitro/
+.cache/
+dist/
+
+# runtime data
+.data/
+
+# logs
+*.log
+
+# editor / os
+.DS_Store
+.idea/
