@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Search, Bell, PenSquare, ChevronDown, User as UserIcon, FileText, Star, Settings, LogOut, Home, Compass, LayoutGrid, Trophy } from 'lucide-vue-next'
-import { currentUser } from '~/utils/mock-data'
-import { getForumList, searchAll } from '~/services/api'
+import { getCurrentUser, getForumList, searchAll } from '~/services/api'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+
+// 当前登录用户（Mock 会话）：通过 /api/users/me 请求获取（SSR 同步取数，保证首屏与注水一致）
+const { data: meData } = await useAsyncData('current-user', () => getCurrentUser())
+const currentUser = computed(() => meData.value!)
 const userMenu = ref(false)
 const userMenuRef = ref<HTMLElement>()
 const searchFocus = ref(false)

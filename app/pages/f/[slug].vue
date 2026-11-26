@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Megaphone, Users, FileText, Zap, Plus, Check, MoreHorizontal, Shield, ScrollText, ArrowLeft } from 'lucide-vue-next'
-import type { Forum, Post } from '~/../shared/types'
-import { getForum, getForumPosts } from '~/services/api'
-import { users } from '~/utils/mock-data'
+import { getForum, getForumPosts, getUsers } from '~/services/api'
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -36,8 +34,7 @@ const { isJoined, toggleJoin } = useInteraction()
 const toast = useToast()
 const showMoreMenu = ref(false)
 
-const posts = ref<Post[]>([])
-const loading = ref(true)
+// 帖子列表：SSR 服务端取数，tab 切换时带参数重新请求
 const tab = ref('all')
 const tabs = [
   { key: 'all', label: '综合' },
@@ -47,24 +44,24 @@ const tabs = [
   { key: 'image', label: '图片' },
   { key: 'vote', label: '投票' },
 ]
-
-watch(tab, load)
-async function load() {
-  loading.value = true
-  posts.value = await getForumPosts(slug, tab.value)
-  loading.value = false
-}
-onMounted(load)
+const { data: postsData, pending: loading } = await useAsyncData(
+  () => `forum-posts-${slug}-${tab.value}`,
+  () => getForumPosts(slug, tab.value),
+  { watch: [tab] },
+)
+const posts = computed(() => postsData.value ?? [])
 
 const onJoin = () => {
   const joined = toggleJoin(forum.value!)
   toast.success(joined ? `欢迎加入「${forum.value!.name}」` : '已退出该吧')
 }
 
+// 成员昵称/头像色：通过 /api/users 请求获取
+const { data: allUsers } = await useAsyncData('users-all', () => getUsers())
 const userNickname = (username: string) =>
-  users.find((u) => u.username === username)?.nickname ?? username
+  allUsers.value?.find((u) => u.username === username)?.nickname ?? username
 const userColors = (username: string): [string, string] =>
-  users.find((u) => u.username === username)?.avatarColors ?? ['#5865e8', '#8b5cf6']
+  allUsers.value?.find((u) => u.username === username)?.avatarColors ?? ['#5865e8', '#8b5cf6']
 </script>
 
 <template>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Shield, MessageSquareHeart, Eye } from 'lucide-vue-next'
-import { getForum } from '~/services/api'
-import { users } from '~/utils/mock-data'
+import { getForum, getUsers } from '~/services/api'
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -17,8 +16,10 @@ const keyword = ref('')
 const roleFilter = ref('全部')
 const roles = ['全部', '吧主', '吧务', '成员']
 
+// 成员列表：通过 /api/users 请求获取
+const { data: allUsers } = await useAsyncData('users-all', () => getUsers())
 const members = computed(() => {
-  const list = users.map((u) => ({
+  const list = (allUsers.value ?? []).map((u) => ({
     ...u,
     role: forum.value!.owner === u.username ? '吧主' : forum.value!.moderators.includes(u.username) ? '吧务' : '成员',
   }))

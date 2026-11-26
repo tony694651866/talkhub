@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { MessageSquarePlus, UserCheck, UserPlus, CalendarDays } from 'lucide-vue-next'
-import type { User as UserType, Post } from '~/../shared/types'
-import { getUser, getUserPosts } from '~/services/api'
-import { currentUser } from '~/utils/mock-data'
+import type { Post } from '~/../shared/types'
+import { getCurrentUser, getUser, getUserPosts } from '~/services/api'
 
 const route = useRoute()
 const username = route.params.username as string
@@ -35,12 +34,13 @@ useSiteSeo({
   },
 })
 
-const isSelf = computed(() => user.value!.username === currentUser.username)
+// 当前登录用户（Mock 会话）：通过 /api/users/me 请求获取
+const { data: meData } = await useAsyncData('current-user', () => getCurrentUser())
+const isSelf = computed(() => user.value!.username === meData.value?.username)
 const { isFollowed, toggleFollow } = useInteraction()
 const toast = useToast()
 
-const posts = ref<Post[]>([])
-const loading = ref(true)
+// 帖子列表：SSR 服务端取数，tab 切换时带参数重新请求
 const tab = ref<'posts' | 'replies' | 'forums' | 'favorites'>('posts')
 const tabs = [
   { key: 'posts', label: '帖子' },
@@ -49,17 +49,12 @@ const tabs = [
   { key: 'favorites', label: '公开收藏' },
 ] as const
 
-watch(tab, load, { immediate: true })
-async function load() {
-  if (tab.value === 'posts') {
-    loading.value = true
-    posts.value = await getUserPosts(username)
-    loading.value = false
-  } else {
-    posts.value = []
-    loading.value = false
-  }
-}
+const { data: postsData, pending: loading } = await useAsyncData(
+  () => `user-posts-${username}-${tab.value}`,
+  () => (tab.value === 'posts' ? getUserPosts(username) : Promise.resolve([] as Post[])),
+  { watch: [tab] },
+)
+const posts = computed(() => postsData.value ?? [])
 const onFollow = () => {
   toggleFollow(username)
   toast.success(isFollowed(username) ? `已关注 ${user.value!.nickname}` : '已取消关注')

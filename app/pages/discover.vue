@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Search, Flame, TrendingUp, Star, ArrowRight } from 'lucide-vue-next'
-import type { Forum, Post } from '~/../shared/types'
 import { getForumList, getPostFeed } from '~/services/api'
 
 useSiteSeo({
@@ -10,10 +9,6 @@ useSiteSeo({
 })
 
 const keyword = ref('')
-const featuredForums = ref<Forum[]>([])
-const emergingForums = ref<Forum[]>([])
-const hotPosts = ref<Post[]>([])
-const loading = ref(true)
 
 const router = useRouter()
 const submitSearch = () => {
@@ -21,17 +16,22 @@ const submitSearch = () => {
   router.push({ path: '/search', query: { q: keyword.value.trim() } })
 }
 
-onMounted(async () => {
+// 发现页聚合数据：SSR 服务端取数
+const { data: discover, pending: loading } = await useAsyncData('discover', async () => {
   const [all, newForums, feed] = await Promise.all([
     getForumList({ sort: 'hot' }),
     getForumList({ sort: 'new' }),
     getPostFeed('hot', 1, 4),
   ])
-  featuredForums.value = all.slice(0, 6)
-  emergingForums.value = newForums.slice(0, 3)
-  hotPosts.value = feed.list
-  loading.value = false
+  return {
+    featuredForums: all.slice(0, 6),
+    emergingForums: newForums.slice(0, 3),
+    hotPosts: feed.list,
+  }
 })
+const featuredForums = computed(() => discover.value?.featuredForums ?? [])
+const emergingForums = computed(() => discover.value?.emergingForums ?? [])
+const hotPosts = computed(() => discover.value?.hotPosts ?? [])
 </script>
 
 <template>

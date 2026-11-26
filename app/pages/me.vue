@@ -2,7 +2,6 @@
 import { LayoutDashboard, FileText, MessageSquare, Star, FileEdit, History, UserPlus, Users, Coffee, Settings, ShieldCheck, BellRing, Trash2, CircleCheck, LoaderCircle } from 'lucide-vue-next'
 import type { Post } from '~/../shared/types'
 import { getCurrentUser, getUserPosts } from '~/services/api'
-import { currentUser } from '~/utils/mock-data'
 
 useSiteSeo({
   title: '个人中心 · TalkHub',
@@ -11,6 +10,11 @@ useSiteSeo({
 })
 
 const route = useRoute()
+
+// 当前登录用户（Mock 会话）：通过 /api/users/me 请求获取
+const { data: meData } = await useAsyncData('current-user', () => getCurrentUser())
+const currentUser = computed(() => meData.value!)
+
 const tab = ref((route.query.tab as string) || 'overview')
 const menu = [
   { key: 'overview', label: '概览', icon: LayoutDashboard },
@@ -38,7 +42,7 @@ onMounted(load)
 async function load() {
   if (tab.value === 'posts') {
     loading.value = true
-    myPosts.value = await getUserPosts(currentUser.username)
+    myPosts.value = await getUserPosts(currentUser.value.username)
     loading.value = false
   }
 }

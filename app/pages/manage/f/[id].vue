@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { LayoutDashboard, Settings, ScrollText, FileText, MessageSquare, Users, ShieldCheck, UserCheck, Ban, History } from 'lucide-vue-next'
-import { getForum } from '~/services/api'
-import { users } from '~/utils/mock-data'
+import { getForum, getUsers } from '~/services/api'
 
 useSiteSeo({
   title: '吧管理中心 · TalkHub',
@@ -37,7 +36,9 @@ const postsRows = [
   { title: '新入坑玩家求指路', author: '新用户_0921', status: '待审核', time: '11-07 09:44' },
   { title: '灌水：大家午休都干嘛', author: '海豹摸鱼中', status: '已隐藏', time: '11-06 22:10' },
 ]
-const members = users.slice(0, 6)
+// 成员列表：通过 /api/users 请求获取
+const { data: allUsers } = await useAsyncData('users-all', () => getUsers())
+const members = computed(() => allUsers.value?.slice(0, 6) ?? [])
 
 const onBanned = async (name: string) => {
   const ok = await confirm({ title: `禁言 @${name}？`, description: '禁言 3 天，需填写原因并记录日志。', confirmText: '确认禁言', danger: true })

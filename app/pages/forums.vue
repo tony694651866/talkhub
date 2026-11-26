@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Search, SlidersHorizontal, X } from 'lucide-vue-next'
-import type { Forum } from '~/../shared/types'
 import { getForumList } from '~/services/api'
 
 const route = useRoute()
@@ -14,8 +13,6 @@ useSiteSeo({
 const keyword = ref('')
 const category = ref((route.query.category as string) || '全部')
 const sort = ref<'hot' | 'active' | 'new' | 'member'>('hot')
-const forums = ref<Forum[]>([])
-const loading = ref(true)
 
 const categories = ['全部', '游戏', '科技', '影视', '动漫', '生活', '情感', '学习', '运动']
 const sorts = [
@@ -25,15 +22,13 @@ const sorts = [
   { key: 'new', label: '最新创建' },
 ] as const
 
-watch([category, sort, keyword], load, { deep: true })
+// 吧列表：SSR 服务端取数，筛选条件变化时带参数重新请求
+const { data: forums, pending: loading } = await useAsyncData(
+  () => `forums-${category.value}-${sort.value}-${keyword.value}`,
+  () => getForumList({ category: category.value, sort: sort.value, keyword: keyword.value }),
+  { watch: [category, sort, keyword], default: () => [] },
+)
 watch(() => route.query.category, (v) => { if (v) category.value = v as string })
-
-async function load() {
-  loading.value = true
-  forums.value = await getForumList({ category: category.value, sort: sort.value, keyword: keyword.value })
-  loading.value = false
-}
-onMounted(load)
 </script>
 
 <template>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, Save, Eye, Send, Bold, Italic, Quote, Code, Link, List, Strikethrough, Heading2, ListOrdered, Undo2, ImagePlus, X, LoaderCircle, Check } from 'lucide-vue-next'
-import { getForumList, publishPost } from '~/services/api'
-import { currentUser } from '~/utils/mock-data'
+import { getCurrentUser, getForumList, publishPost } from '~/services/api'
 
 useSiteSeo({
   title: '发布帖子 · TalkHub',
@@ -11,6 +10,10 @@ useSiteSeo({
 
 const router = useRouter()
 const toast = useToast()
+
+// 当前登录用户（Mock 会话）：通过 /api/users/me 请求获取
+const { data: meData } = await useAsyncData('current-user', () => getCurrentUser())
+const currentUser = computed(() => meData.value!)
 
 const forumList = ref<{ slug: string; name: string }[]>([])
 const forumSlug = ref('')

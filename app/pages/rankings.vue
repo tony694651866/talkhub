@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { TrendingUp, TrendingDown, Minus, Trophy } from 'lucide-vue-next'
-import type { Post, Forum, User, Topic } from '~/../shared/types'
 import { getRankings } from '~/services/api'
 
 useSiteSeo({
@@ -11,8 +10,6 @@ useSiteSeo({
 
 const tab = ref<'posts' | 'forums' | 'authors' | 'topics'>('posts')
 const range = ref<'today' | 'week' | 'month'>('week')
-const loading = ref(true)
-const rankList = ref<any[]>([])
 
 const tabs = [
   { key: 'posts', label: '热门帖子' },
@@ -28,12 +25,12 @@ const ranges = [
 
 const rangeText = { today: '今日', week: '本周', month: '本月' }
 
-watch([tab, range], load, { immediate: true })
-async function load() {
-  loading.value = true
-  rankList.value = await getRankings(range.value, tab.value)
-  loading.value = false
-}
+// 榜单数据：SSR 服务端取数，切换 tab / 周期时带参数重新请求
+const { data: rankList, pending: loading } = await useAsyncData<any[]>(
+  () => `rankings-${range.value}-${tab.value}`,
+  () => getRankings(range.value, tab.value) as Promise<any[]>,
+  { watch: [tab, range], default: () => [] },
+)
 
 const trendOf = (i: number) => (i === 0 ? 'up' : i === 1 ? 'up' : i % 3 === 2 ? 'down' : 'flat')
 const metricText = (item: any) => {
